@@ -1,0 +1,57 @@
+ // Pick image from gallery
+ 
+ private void pickFromGallery() {
+    Intent intent = new Intent(Intent.ACTION_PICK);
+    intent.setType("image/*");
+    String[] mimeTypes = {"image/jpeg", "image/png"};
+    intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+    startActivityForResult(intent, 1001);
+ }
+ 
+
+// Get Image Uri once you picked the image form gallery
+// Uri imageUri;
+
+ public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            imageUri = data.getData();
+        }
+    }
+
+
+//Then Upload image to firebase storage. Make sure that you have set rules for firebase storage to read and write.
+
+private void uploadDataToServer() {
+        String userId = "fsinlai8vk234f";
+        final StorageReference ref = FirebaseStorage.getInstance().getReference().child("catalogue").child(userId).child("Item").child(System.currentTimeMillis() + "");
+        UploadTask uploadTask = ref.putFile(imageUri);
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+                return ref.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    Log.e("check", "Img uploaded uri, " + downloadUri.toString());
+                } else {
+                    Log.e("check", "failed to upload img");
+                }
+            }
+        });
+    }
+    
+    
+    
+    
+    //Wait some time to upload image to firebase. It takes little time.
+
+ 
+ 
+ 
